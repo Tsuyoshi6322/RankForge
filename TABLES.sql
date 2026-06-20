@@ -129,11 +129,83 @@ CREATE TABLE tblMatchParticipant (
     CONSTRAINT CHK_MatchParticipant_Placement   CHECK (intPlacement IS NULL OR intPlacement > 0)
 );
 
-CREATE INDEX IX_MatchParticipant_MatchID
-    ON tblMatchParticipant(intMatchID);
+CREATE INDEX IX_MatchParticipant_MatchID    ON tblMatchParticipant(intMatchID);
+CREATE INDEX IX_MatchParticipant_ProfileID  ON tblMatchParticipant(intProfileID);
 
-CREATE INDEX IX_MatchParticipant_ProfileID
-    ON tblMatchParticipant(intProfileID);
+
+GO
+
+
+CREATE TABLE tblStatisticType (
+    intStatisticTypeID  INT           IDENTITY(1,1)   CONSTRAINT PK_StatisticType             PRIMARY KEY,
+    nvcName             NVARCHAR(100) NOT NULL,
+    nvcDescription      NVARCHAR(500) NULL,
+    bitIsActive         BIT           NOT NULL        CONSTRAINT DF_StatisticType_IsActive    DEFAULT 1,
+    dtCreatedAt         DATETIME2     NOT NULL        CONSTRAINT DF_StatisticType_CreatedAt   DEFAULT GETDATE(),
+
+    CONSTRAINT UQ_StatisticType_Name    UNIQUE (nvcName)
+);
+
+CREATE INDEX IX_StatisticType_Name  ON tblStatisticType(nvcName);
+
+
+GO
+
+
+CREATE TABLE tblGameStatisticType (
+    intGameStatisticTypeID  INT         IDENTITY(1,1)   CONSTRAINT PK_GameStatisticType             PRIMARY KEY,
+    intGameID               INT         NOT NULL,
+    intStatisticTypeID      INT         NOT NULL,
+    dtCreatedAt             DATETIME2   NOT NULL        CONSTRAINT DF_GameStatisticType_CreatedAt   DEFAULT GETDATE(),
+
+    CONSTRAINT FK_GameStatisticType_Game            FOREIGN KEY (intGameID)             REFERENCES tblGame(intGameID),
+    CONSTRAINT FK_GameStatisticType_StatisticType   FOREIGN KEY (intStatisticTypeID)    REFERENCES tblStatisticType(intStatisticTypeID),
+    CONSTRAINT UQ_GameStatisticType                 UNIQUE (intGameID,intStatisticTypeID)
+);
+
+CREATE INDEX IX_GameStatisticType_GameID            ON tblGameStatisticType(intGameID);
+CREATE INDEX IX_GameStatisticType_StatisticTypeID   ON tblGameStatisticType(intStatisticTypeID);
+
+
+GO
+
+
+CREATE TABLE tblMatchStatistic (
+    intStatisticID          INT             IDENTITY(1,1)   CONSTRAINT PK_MatchStatistic PRIMARY KEY,
+    intParticipantID        INT             NOT NULL,
+    intGameStatisticTypeID  INT             NOT NULL,
+    decValue                DECIMAL(18,2)   NOT NULL,
+
+    CONSTRAINT FK_MatchStatistic_Participant        FOREIGN KEY (intParticipantID)          REFERENCES tblMatchParticipant(intParticipantID),
+    CONSTRAINT FK_MatchStatistic_GameStatisticType  FOREIGN KEY (intGameStatisticTypeID)    REFERENCES tblGameStatisticType(intGameStatisticTypeID),
+    CONSTRAINT UQ_MatchStatistic                    UNIQUE (intParticipantID,intGameStatisticTypeID),
+    CONSTRAINT CHK_MatchStatistic_Value             CHECK (decValue >= 0)
+);
+
+CREATE INDEX IX_MatchStatistic_ParticipantID        ON tblMatchStatistic(intParticipantID);
+CREATE INDEX IX_MatchStatistic_GameStatisticTypeID  ON tblMatchStatistic(intGameStatisticTypeID);
+
+
+GO
+
+
+CREATE TABLE tblRankHistory (
+    intRankHistoryID    INT         IDENTITY(1,1)   CONSTRAINT PK_RankHistory               PRIMARY KEY,
+    intProfileID        INT         NOT NULL,
+    intMatchID          INT         NOT NULL,
+    intPreviousRank     INT         NOT NULL,
+    intNewRank          INT         NOT NULL,
+    dtChangeDate        DATETIME2   NOT NULL        CONSTRAINT DF_RankHistory_ChangeDate    DEFAULT GETDATE(),
+
+    CONSTRAINT FK_RankHistory_Profile       FOREIGN KEY (intProfileID)  REFERENCES tblPlayerGameProfile(intProfileID),
+    CONSTRAINT FK_RankHistory_Match         FOREIGN KEY (intMatchID)    REFERENCES tblMatch(intMatchID),
+    CONSTRAINT CHK_RankHistory_PreviousRank CHECK (intPreviousRank >= 0),
+    CONSTRAINT CHK_RankHistory_NewRank      CHECK (intNewRank >= 0)
+);
+
+CREATE INDEX IX_RankHistory_ProfileID   ON tblRankHistory(intProfileID);
+CREATE INDEX IX_RankHistory_MatchID     ON tblRankHistory(intMatchID);
+CREATE INDEX IX_RankHistory_ChangeDate  ON tblRankHistory(dtChangeDate);
 
 
 GO

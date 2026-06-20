@@ -1,3 +1,4 @@
+
 CREATE TABLE tblPlayer (
     intPlayerID    INT             IDENTITY(1,1) PRIMARY KEY,
     nvcNickname    NVARCHAR(50)    NOT NULL,
@@ -20,7 +21,6 @@ CREATE INDEX IX_Player_Nickname ON tblPlayer(nvcNickname);
 CREATE INDEX IX_Player_Country  ON tblPlayer(nvcCountry);
 
 GO
-
 
 CREATE TABLE tblGame (
     intGameID       INT                 IDENTITY(1,1) PRIMARY KEY,
@@ -70,5 +70,50 @@ CREATE INDEX IX_Season_GameID
 
 CREATE INDEX IX_Season_IsActive
     ON tblSeason(bitIsActive);
+
+GO
+
+CREATE TABLE tblPlayerGameProfile (
+    intProfileID        INT         IDENTITY(1,1)   CONSTRAINT PK_PlayerGameProfile     PRIMARY KEY,
+    intPlayerID         INT         NOT NULL,
+    intGameID           INT         NOT NULL,
+    intCurrentRank      INT         NOT NULL        CONSTRAINT DF_Profile_CurrentRank   DEFAULT 1000,
+    intMatchesPlayed    INT         NOT NULL        CONSTRAINT DF_Profile_MatchesPlayed DEFAULT 0,
+    intWins             INT         NOT NULL        CONSTRAINT DF_Profile_Wins          DEFAULT 0,
+    intLosses           INT         NOT NULL        CONSTRAINT DF_Profile_Losses        DEFAULT 0,
+    dtCreatedAt         DATETIME2   NOT NULL        CONSTRAINT DF_Profile_CreatedAt     DEFAULT GETDATE(),
+
+    CONSTRAINT FK_Profile_Player
+        FOREIGN KEY (intPlayerID)
+        REFERENCES tblPlayer(intPlayerID),
+
+    CONSTRAINT FK_Profile_Game
+        FOREIGN KEY (intGameID)
+        REFERENCES tblGame(intGameID),
+
+    CONSTRAINT UQ_Profile_Player_Game
+        UNIQUE (intPlayerID, intGameID),
+
+    CONSTRAINT CHK_Profile_CurrentRank
+        CHECK (intCurrentRank >= 0),
+
+    CONSTRAINT CHK_Profile_MatchesPlayed
+        CHECK (intMatchesPlayed >= 0),
+
+    CONSTRAINT CHK_Profile_Wins
+        CHECK (intWins >= 0),
+
+    CONSTRAINT CHK_Profile_Losses
+        CHECK (intLosses >= 0)
+);
+
+CREATE INDEX IX_Profile_PlayerID
+    ON tblPlayerGameProfile(intPlayerID);
+
+CREATE INDEX IX_Profile_GameID
+    ON tblPlayerGameProfile(intGameID);
+
+CREATE INDEX IX_Profile_Rank
+    ON tblPlayerGameProfile(intCurrentRank);
 
 GO

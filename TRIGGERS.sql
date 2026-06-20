@@ -30,4 +30,30 @@ BEGIN
     WHERE i.intCurrentRank <> d.intCurrentRank;
 END;
 
+
 GO
+
+
+CREATE TRIGGER trgMatchStatistic_Validate
+ON tblMatchStatistic
+AFTER INSERT
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF EXISTS (
+        SELECT 1
+        FROM inserted
+        WHERE decValue > 1000000
+    )
+    BEGIN
+        THROW 50031,
+              'Statistic value exceeds allowed limit.',
+              1;
+    END;
+END;
+
+
+GO
+
+

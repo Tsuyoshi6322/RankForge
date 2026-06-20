@@ -250,4 +250,81 @@ BEGIN
     END CATCH
 END;
 
+
+GO
+
+
+CREATE PROCEDURE uspGenerateSeasonLeaderboard
+(
+    @intGameID      INT,
+    @intSeasonID    INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM tblGame
+        WHERE intGameID = @intGameID
+    )
+    BEGIN
+        THROW 50010, 'Game does not exist.', 1;
+    END;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM tblSeason
+        WHERE intSeasonID = @intSeasonID
+          AND intGameID = @intGameID
+    )
+    BEGIN
+        THROW 50011, 'Season does not exist for the selected game.', 1;
+    END;
+
+    ;WITH SeasonPlayers AS
+    (
+        SELECT DISTINCT
+            pgp.intProfileID,
+            p.nvcNickname,
+            pgp.intCurrentRank,
+            pgp.intMatchesPlayed,
+            pgp.intWins,
+            pgp.intLosses
+        FROM tblMatch m
+        INNER JOIN tblMatchParticipant mp
+            ON m.intMatchID = mp.intMatchID
+        INNER JOIN tblPlayerGameProfile pgp
+            ON mp.intProfileID = pgp.intProfileID
+        INNER JOIN tblPlayer p
+            ON pgp.intPlayerID = p.intPlayerID
+        WHERE m.intGameID = @intGameID
+          AND m.intSeasonID = @intSeasonID
+    )
+    SELECT
+        RANK() OVER (
+            ORDER BY intCurrentRank DESC
+        ) AS intPosition,
+
+        intProfileID,
+        nvcNickname,
+        intCurrentRank,
+        intMatchesPlayed,
+        intWins,
+        intLosses,
+
+        CAST(
+            CASE
+                WHEN intMatchesPlayed = 0 THEN 0
+                ELSE (intWins * 100.0) / intMatchesPlayed
+            END
+            AS DECIMAL(5,2)
+        ) AS decWinRate
+    FROM SeasonPlayers
+    ORDER BY
+        intCurrentRank DESC,
+        intWins DESC,
+        nvcNickname ASC;
+END;
+
 GO

@@ -327,4 +327,102 @@ BEGIN
         nvcNickname ASC;
 END;
 
+
+GO
+
+
+CREATE PROCEDURE uspGetPlayerStatistics
+(
+    @intPlayerID INT,
+    @intGameID   INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM tblPlayer
+        WHERE intPlayerID = @intPlayerID
+    )
+    BEGIN
+        THROW 50020, 'Player does not exist.', 1;
+    END;
+
+    IF NOT EXISTS (
+        SELECT 1
+        FROM tblGame
+        WHERE intGameID = @intGameID
+    )
+    BEGIN
+        THROW 50021, 'Game does not exist.', 1;
+    END;
+
+    DECLARE @intProfileID INT;
+
+    SELECT
+        @intProfileID = intProfileID
+    FROM tblPlayerGameProfile
+    WHERE intPlayerID = @intPlayerID
+      AND intGameID = @intGameID;
+
+    IF @intProfileID IS NULL
+    BEGIN
+        THROW 50022, 'Player does not have a profile for this game.', 1;
+    END;
+
+    SELECT
+        p.intPlayerID,
+        p.nvcNickname,
+        p.nvcCountry,
+
+        g.intGameID,
+        g.nvcName,
+
+        pgp.intProfileID,
+        pgp.intCurrentRank,
+        pgp.intMatchesPlayed,
+        pgp.intWins,
+        pgp.intLosses,
+
+        CAST(
+            CASE
+                WHEN pgp.intMatchesPlayed = 0 THEN 0
+                ELSE (pgp.intWins * 100.0) / pgp.intMatchesPlayed
+            END
+            AS DECIMAL(5,2)
+        ) AS decWinRate
+    FROM tblPlayer p
+    INNER JOIN tblPlayerGameProfile pgp
+        ON p.intPlayerID = pgp.intPlayerID
+    INNER JOIN tblGame g
+        ON pgp.intGameID = g.intGameID
+    WHERE pgp.intProfileID = @intProfileID;
+
+    SELECT
+        st.nvcName AS nvcStatisticName,
+
+        CAST(
+            AVG(ms.decValue)
+            AS DECIMAL(18,2)
+        ) AS decAverageValue,
+
+        MIN(ms.decValue) AS decMinimumValue,
+        MAX(ms.decValue) AS decMaximumValue,
+
+        COUNT(*) AS intRecordedMatches
+    FROM tblMatchStatistic ms
+    INNER JOIN tblGameStatisticType gst
+        ON ms.intGameStatisticTypeID = gst.intGameStatisticTypeID
+    INNER JOIN tblStatisticType st
+        ON gst.intStatisticTypeID = st.intStatisticTypeID
+    INNER JOIN tblMatchParticipant mp
+        ON ms.intParticipantID = mp.intParticipantID
+    WHERE mp.intProfileID = @intProfileID
+    GROUP BY
+        st.nvcName
+    ORDER BY
+        st.nvcName;
+END;
+
 GO

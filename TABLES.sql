@@ -1,8 +1,8 @@
-CREATE TABLE Player (
-    PlayerID    INT             IDENTITY(1,1) PRIMARY KEY,
-    Nickname    NVARCHAR(50)    NOT NULL,
-    Email       NVARCHAR(255)   NOT NULL,
-    Country     NVARCHAR(100)   NULL,
+CREATE TABLE tblPlayer (
+    intPlayerID    INT             IDENTITY(1,1) PRIMARY KEY,
+    nvcNickname    NVARCHAR(50)    NOT NULL,
+    nvcEmail       NVARCHAR(255)   NOT NULL,
+    nvcCountry     NVARCHAR(100)   NULL,
 
     RegistrationDate DATETIME2 NOT NULL
         CONSTRAINT DF_Player_RegistrationDate
@@ -12,22 +12,22 @@ CREATE TABLE Player (
         CONSTRAINT DF_Player_IsActive
         DEFAULT 1,
 
-    CONSTRAINT UQ_Player_Nickname   UNIQUE (Nickname),
-    CONSTRAINT UQ_Player_Email      UNIQUE (Email)
+    CONSTRAINT UQ_Player_Nickname   UNIQUE (nvcNickname),
+    CONSTRAINT UQ_Player_Email      UNIQUE (nvcEmail)
 );
 
-CREATE INDEX IX_Player_Nickname ON Player(Nickname);
-CREATE INDEX IX_Player_Country  ON Player(Country);
+CREATE INDEX IX_Player_Nickname ON tblPlayer(nvcNickname);
+CREATE INDEX IX_Player_Country  ON tblPlayer(nvcCountry);
 
 GO
 
 
-CREATE TABLE Game (
-    GameID      INT                 IDENTITY(1,1) PRIMARY KEY,
-    Name        NVARCHAR(100)       NOT NULL,
-    Genre       NVARCHAR(50)        NOT NULL,
-    ReleaseDate DATE                NULL,
-    Developer   NVARCHAR(100)       NULL,
+CREATE TABLE tblGame (
+    intGameID       INT                 IDENTITY(1,1) PRIMARY KEY,
+    nvcName         NVARCHAR(100)       NOT NULL,
+    nvcGenre        NVARCHAR(50)        NOT NULL,
+    dReleaseDate    DATE                NULL,
+    nvcDeveloper    NVARCHAR(100)       NULL,
 
     IsActive BIT NOT NULL
         CONSTRAINT DF_Game_IsActive
@@ -37,11 +37,38 @@ CREATE TABLE Game (
         CONSTRAINT DF_Game_CreatedAt
         DEFAULT GETDATE(),
 
-    CONSTRAINT UQ_Game_Name UNIQUE (Name)
+    CONSTRAINT UQ_Game_Name UNIQUE (nvcName)
 );
 
-CREATE INDEX IX_Game_Name   ON Game(Name);
-CREATE INDEX IX_Game_Genre  ON Game(Genre);
+CREATE INDEX IX_Game_Name   ON tblGame(nvcName);
+CREATE INDEX IX_Game_Genre  ON tblGame(nvcGenre);
 
 GO
 
+CREATE TABLE tblSeason (
+    intSeasonID INT             IDENTITY(1,1)   CONSTRAINT PK_Season PRIMARY KEY,
+    intGameID   INT             NOT NULL,
+    nvcName     NVARCHAR(100)   NOT NULL,
+    dStartDate  DATE            NOT NULL,
+    dEndDate    DATE            NOT NULL,
+    bitIsActive BIT             NOT NULL        CONSTRAINT DF_Season_IsActive   DEFAULT 1,
+    dtCreatedAt DATETIME2       NOT NULL        CONSTRAINT DF_Season_CreatedAt  DEFAULT GETDATE(),
+
+    CONSTRAINT FK_Season_Game
+        FOREIGN KEY (intGameID)
+        REFERENCES tblGame(intGameID),
+
+    CONSTRAINT CHK_Season_DateRange
+        CHECK (dEndDate > dStartDate),
+
+    CONSTRAINT UQ_Season_Game_Name
+        UNIQUE (intGameID, nvcName)
+);
+
+CREATE INDEX IX_Season_GameID
+    ON tblSeason(intGameID);
+
+CREATE INDEX IX_Season_IsActive
+    ON tblSeason(bitIsActive);
+
+GO

@@ -54,22 +54,13 @@ CREATE TABLE tblSeason (
     bitIsActive BIT             NOT NULL        CONSTRAINT DF_Season_IsActive   DEFAULT 1,
     dtCreatedAt DATETIME2       NOT NULL        CONSTRAINT DF_Season_CreatedAt  DEFAULT GETDATE(),
 
-    CONSTRAINT FK_Season_Game
-        FOREIGN KEY (intGameID)
-        REFERENCES tblGame(intGameID),
-
-    CONSTRAINT CHK_Season_DateRange
-        CHECK (dEndDate > dStartDate),
-
-    CONSTRAINT UQ_Season_Game_Name
-        UNIQUE (intGameID, nvcName)
+    CONSTRAINT FK_Season_Game       FOREIGN KEY (intGameID) REFERENCES tblGame(intGameID),
+    CONSTRAINT CHK_Season_DateRange CHECK (dEndDate > dStartDate),
+    CONSTRAINT UQ_Season_Game_Name  UNIQUE (intGameID, nvcName)
 );
 
-CREATE INDEX IX_Season_GameID
-    ON tblSeason(intGameID);
-
-CREATE INDEX IX_Season_IsActive
-    ON tblSeason(bitIsActive);
+CREATE INDEX IX_Season_GameID   ON tblSeason(intGameID);
+CREATE INDEX IX_Season_IsActive ON tblSeason(bitIsActive);
 
 GO
 
@@ -83,37 +74,34 @@ CREATE TABLE tblPlayerGameProfile (
     intLosses           INT         NOT NULL        CONSTRAINT DF_Profile_Losses        DEFAULT 0,
     dtCreatedAt         DATETIME2   NOT NULL        CONSTRAINT DF_Profile_CreatedAt     DEFAULT GETDATE(),
 
-    CONSTRAINT FK_Profile_Player
-        FOREIGN KEY (intPlayerID)
-        REFERENCES tblPlayer(intPlayerID),
-
-    CONSTRAINT FK_Profile_Game
-        FOREIGN KEY (intGameID)
-        REFERENCES tblGame(intGameID),
-
-    CONSTRAINT UQ_Profile_Player_Game
-        UNIQUE (intPlayerID, intGameID),
-
-    CONSTRAINT CHK_Profile_CurrentRank
-        CHECK (intCurrentRank >= 0),
-
-    CONSTRAINT CHK_Profile_MatchesPlayed
-        CHECK (intMatchesPlayed >= 0),
-
-    CONSTRAINT CHK_Profile_Wins
-        CHECK (intWins >= 0),
-
-    CONSTRAINT CHK_Profile_Losses
-        CHECK (intLosses >= 0)
+    CONSTRAINT FK_Profile_Player            FOREIGN KEY (intPlayerID)   REFERENCES tblPlayer(intPlayerID),
+    CONSTRAINT FK_Profile_Game              FOREIGN KEY (intGameID)     REFERENCES tblGame(intGameID),
+    CONSTRAINT UQ_Profile_Player_Game       UNIQUE (intPlayerID, intGameID),
+    CONSTRAINT CHK_Profile_CurrentRank      CHECK (intCurrentRank >= 0),
+    CONSTRAINT CHK_Profile_MatchesPlayed    CHECK (intMatchesPlayed >= 0),
+    CONSTRAINT CHK_Profile_Wins             CHECK (intWins >= 0),
+    CONSTRAINT CHK_Profile_Losses           CHECK (intLosses >= 0)
 );
 
-CREATE INDEX IX_Profile_PlayerID
-    ON tblPlayerGameProfile(intPlayerID);
+CREATE INDEX IX_Profile_PlayerID    ON tblPlayerGameProfile(intPlayerID);
+CREATE INDEX IX_Profile_GameID      ON tblPlayerGameProfile(intGameID);
+CREATE INDEX IX_Profile_Rank        ON tblPlayerGameProfile(intCurrentRank);
 
-CREATE INDEX IX_Profile_GameID
-    ON tblPlayerGameProfile(intGameID);
+GO
 
-CREATE INDEX IX_Profile_Rank
-    ON tblPlayerGameProfile(intCurrentRank);
+CREATE TABLE tblMatch (
+    intMatchID  INT             IDENTITY(1,1)    CONSTRAINT PK_Match         PRIMARY KEY,
+    intGameID   INT             NOT NULL,
+    intSeasonID INT             NOT NULL,
+    dtMatchDate DATETIME2       NOT NULL         CONSTRAINT DF_Match_Date    DEFAULT GETDATE(),
+    nvcStatus   NVARCHAR(50)    NOT NULL         CONSTRAINT DF_Match_Status  DEFAULT 'Completed',
+
+    CONSTRAINT FK_Match_Game    FOREIGN KEY (intGameID)     REFERENCES tblGame(intGameID),
+    CONSTRAINT FK_Match_Season  FOREIGN KEY (intSeasonID)   REFERENCES tblSeason(intSeasonID)
+);
+
+CREATE INDEX IX_Match_GameID    ON tblMatch(intGameID);
+CREATE INDEX IX_Match_SeasonID  ON tblMatch(intSeasonID);
+CREATE INDEX IX_Match_Date      ON tblMatch(dtMatchDate);
 
 GO

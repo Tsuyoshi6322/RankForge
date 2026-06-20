@@ -192,7 +192,7 @@ GO
 CREATE TABLE tblRankHistory (
     intRankHistoryID    INT         IDENTITY(1,1)   CONSTRAINT PK_RankHistory               PRIMARY KEY,
     intProfileID        INT         NOT NULL,
-    intMatchID          INT         NOT NULL,
+    intMatchID          INT         NULL,
     intPreviousRank     INT         NOT NULL,
     intNewRank          INT         NOT NULL,
     dtChangeDate        DATETIME2   NOT NULL        CONSTRAINT DF_RankHistory_ChangeDate    DEFAULT GETDATE(),

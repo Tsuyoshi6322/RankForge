@@ -20,7 +20,9 @@ CREATE TABLE tblPlayer (
 CREATE INDEX IX_Player_Nickname ON tblPlayer(nvcNickname);
 CREATE INDEX IX_Player_Country  ON tblPlayer(nvcCountry);
 
+
 GO
+
 
 CREATE TABLE tblGame (
     intGameID       INT                 IDENTITY(1,1) PRIMARY KEY,
@@ -43,7 +45,9 @@ CREATE TABLE tblGame (
 CREATE INDEX IX_Game_Name   ON tblGame(nvcName);
 CREATE INDEX IX_Game_Genre  ON tblGame(nvcGenre);
 
+
 GO
+
 
 CREATE TABLE tblSeason (
     intSeasonID INT             IDENTITY(1,1)   CONSTRAINT PK_Season PRIMARY KEY,
@@ -62,7 +66,9 @@ CREATE TABLE tblSeason (
 CREATE INDEX IX_Season_GameID   ON tblSeason(intGameID);
 CREATE INDEX IX_Season_IsActive ON tblSeason(bitIsActive);
 
+
 GO
+
 
 CREATE TABLE tblPlayerGameProfile (
     intProfileID        INT         IDENTITY(1,1)   CONSTRAINT PK_PlayerGameProfile     PRIMARY KEY,
@@ -87,7 +93,9 @@ CREATE INDEX IX_Profile_PlayerID    ON tblPlayerGameProfile(intPlayerID);
 CREATE INDEX IX_Profile_GameID      ON tblPlayerGameProfile(intGameID);
 CREATE INDEX IX_Profile_Rank        ON tblPlayerGameProfile(intCurrentRank);
 
+
 GO
+
 
 CREATE TABLE tblMatch (
     intMatchID  INT             IDENTITY(1,1)    CONSTRAINT PK_Match         PRIMARY KEY,
@@ -104,4 +112,29 @@ CREATE INDEX IX_Match_GameID    ON tblMatch(intGameID);
 CREATE INDEX IX_Match_SeasonID  ON tblMatch(intSeasonID);
 CREATE INDEX IX_Match_Date      ON tblMatch(dtMatchDate);
 
+
 GO
+
+
+CREATE TABLE tblMatchParticipant (
+    intParticipantID    INT  IDENTITY(1,1)  CONSTRAINT PK_MatchParticipant          PRIMARY KEY,
+    intMatchID          INT  NOT NULL,
+    intProfileID        INT  NOT NULL,
+    intPlacement        INT  NULL,
+    bitIsWinner         BIT  NOT NULL       CONSTRAINT DF_MatchParticipant_IsWinner DEFAULT 0,
+
+    CONSTRAINT FK_MatchParticipant_Match        FOREIGN KEY (intMatchID)    REFERENCES tblMatch(intMatchID),
+    CONSTRAINT FK_MatchParticipant_Profile      FOREIGN KEY (intProfileID)  REFERENCES tblPlayerGameProfile(intProfileID),
+    CONSTRAINT UQ_MatchParticipant              UNIQUE (intMatchID, intProfileID),  
+    CONSTRAINT CHK_MatchParticipant_Placement   CHECK (intPlacement IS NULL OR intPlacement > 0)
+);
+
+CREATE INDEX IX_MatchParticipant_MatchID
+    ON tblMatchParticipant(intMatchID);
+
+CREATE INDEX IX_MatchParticipant_ProfileID
+    ON tblMatchParticipant(intProfileID);
+
+
+GO
+

@@ -152,4 +152,102 @@ BEGIN
     END CATCH
 END;
 
+
+GO
+
+
+CREATE PROCEDURE uspUpdatePlayerRanking
+(
+    @intMatchID INT
+)
+AS
+BEGIN
+    SET NOCOUNT ON;
+    SET XACT_ABORT ON;
+
+    BEGIN TRANSACTION;
+
+    BEGIN TRY
+
+        DECLARE
+            @intProfileID      INT,
+            @bitIsWinner       BIT,
+            @intPreviousRank   INT,
+            @intNewRank        INT;
+
+        DECLARE curParticipants CURSOR LOCAL FAST_FORWARD FOR
+
+            SELECT
+                pgp.intProfileID,
+                mp.bitIsWinner,
+                pgp.intCurrentRank
+            FROM tblMatchParticipant mp
+            INNER JOIN tblPlayerGameProfile pgp
+                ON mp.intProfileID = pgp.intProfileID
+            WHERE mp.intMatchID = @intMatchID;
+
+        OPEN curParticipants;
+
+        FETCH NEXT FROM curParticipants
+        INTO
+            @intProfileID,
+            @bitIsWinner,
+            @intPreviousRank;
+
+        WHILE @@FETCH_STATUS = 0
+        BEGIN
+
+            IF @bitIsWinner = 1
+                SET @intNewRank = @intPreviousRank + 25;
+            ELSE
+                SET @intNewRank =
+                    CASE
+                        WHEN @intPreviousRank >= 25
+                            THEN @intPreviousRank - 25
+                        ELSE 0
+                    END;
+
+            UPDATE tblPlayerGameProfile
+            SET intCurrentRank = @intNewRank
+            WHERE intProfileID = @intProfileID;
+
+            INSERT INTO tblRankHistory
+            (
+                intProfileID,
+                intMatchID,
+                intPreviousRank,
+                intNewRank
+            )
+            VALUES
+            (
+                @intProfileID,
+                @intMatchID,
+                @intPreviousRank,
+                @intNewRank
+            );
+
+            FETCH NEXT FROM curParticipants
+            INTO
+                @intProfileID,
+                @bitIsWinner,
+                @intPreviousRank;
+
+        END
+
+        CLOSE curParticipants;
+        DEALLOCATE curParticipants;
+
+        COMMIT TRANSACTION;
+
+    END TRY
+    BEGIN CATCH
+
+        IF @@TRANCOUNT > 0
+            ROLLBACK TRANSACTION;
+
+        THROW;
+
+    END CATCH
+END;
+
 GO

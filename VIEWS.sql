@@ -150,3 +150,48 @@ INNER JOIN tblGame g
 
 GO
 
+
+CREATE VIEW vwMatchDetails
+AS
+SELECT
+    m.intMatchID,
+
+    g.intGameID,
+    g.nvcName AS nvcGameName,
+
+    s.intSeasonID,
+    s.nvcName AS nvcSeasonName,
+
+    m.dtMatchDate,
+    m.nvcStatus,
+
+    p.intPlayerID,
+    p.nvcNickname,
+
+    pgp.intProfileID,
+    pgp.intCurrentRank,
+
+    mp.intPlacement,
+    mp.bitIsWinner
+
+FROM tblMatch m
+
+INNER JOIN tblGame g
+    ON m.intGameID = g.intGameID
+
+INNER JOIN tblSeason s
+    ON m.intSeasonID = s.intSeasonID
+
+INNER JOIN tblMatchParticipant mp
+    ON m.intMatchID = mp.intMatchID
+
+INNER JOIN tblPlayerGameProfile pgp
+    ON mp.intProfileID = pgp.intProfileID
+
+INNER JOIN tblPlayer p
+    ON pgp.intPlayerID = p.intPlayerID;
+
+
+GO
+
+

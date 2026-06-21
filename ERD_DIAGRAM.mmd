@@ -1,0 +1,108 @@
+erDiagram
+
+    tblPlayer {
+        INT intPlayerID PK
+        NVARCHAR nvcNickname
+        NVARCHAR nvcEmail
+        NVARCHAR nvcCountry
+        DATETIME2 RegistrationDate
+        BIT IsActive
+    }
+
+    tblGame {
+        INT intGameID PK
+        NVARCHAR nvcName
+        NVARCHAR nvcGenre
+        DATE dReleaseDate
+        NVARCHAR nvcDeveloper
+        BIT IsActive
+        DATETIME2 CreatedAt
+    }
+
+    tblSeason {
+        INT intSeasonID PK
+        INT intGameID FK
+        NVARCHAR nvcName
+        DATE dStartDate
+        DATE dEndDate
+        BIT bitIsActive
+        DATETIME2 dtCreatedAt
+    }
+
+    tblPlayerGameProfile {
+        INT intProfileID PK
+        INT intPlayerID FK
+        INT intGameID FK
+        INT intCurrentRank
+        INT intMatchesPlayed
+        INT intWins
+        INT intLosses
+        DATETIME2 dtCreatedAt
+    }
+
+    tblMatch {
+        INT intMatchID PK
+        INT intGameID FK
+        INT intSeasonID FK
+        DATETIME2 dtMatchDate
+        NVARCHAR nvcStatus
+    }
+
+    tblMatchParticipant {
+        INT intParticipantID PK
+        INT intMatchID FK
+        INT intProfileID FK
+        INT intPlacement
+        BIT bitIsWinner
+    }
+
+    tblStatisticType {
+        INT intStatisticTypeID PK
+        NVARCHAR nvcName
+        NVARCHAR nvcDescription
+        BIT bitIsActive
+        DATETIME2 dtCreatedAt
+    }
+
+    tblGameStatisticType {
+        INT intGameStatisticTypeID PK
+        INT intGameID FK
+        INT intStatisticTypeID FK
+        DATETIME2 dtCreatedAt
+    }
+
+    tblMatchStatistic {
+        INT intStatisticID PK
+        INT intParticipantID FK
+        INT intGameStatisticTypeID FK
+        DECIMAL decValue
+    }
+
+    tblRankHistory {
+        INT intRankHistoryID PK
+        INT intProfileID FK
+        INT intMatchID FK
+        INT intPreviousRank
+        INT intNewRank
+        DATETIME2 dtChangeDate
+    }
+
+    tblPlayer ||--o{ tblPlayerGameProfile : owns
+    tblGame ||--o{ tblPlayerGameProfile : contains
+
+    tblGame ||--o{ tblSeason : has
+    tblGame ||--o{ tblMatch : contains
+
+    tblSeason ||--o{ tblMatch : organizes
+
+    tblMatch ||--o{ tblMatchParticipant : includes
+    tblPlayerGameProfile ||--o{ tblMatchParticipant : participates
+
+    tblStatisticType ||--o{ tblGameStatisticType : defines
+    tblGame ||--o{ tblGameStatisticType : supports
+
+    tblMatchParticipant ||--o{ tblMatchStatistic : records
+    tblGameStatisticType ||--o{ tblMatchStatistic : categorizes
+
+    tblPlayerGameProfile ||--o{ tblRankHistory : owns
+    tblMatch ||--o{ tblRankHistory : generates

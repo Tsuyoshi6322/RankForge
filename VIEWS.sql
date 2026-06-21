@@ -113,3 +113,40 @@ GROUP BY
 GO
 
 
+CREATE VIEW vwRankingHistory
+AS
+SELECT
+    rh.intRankHistoryID,
+
+    p.intPlayerID,
+    p.nvcNickname,
+
+    g.intGameID,
+    g.nvcName AS nvcGameName,
+
+    pgp.intProfileID,
+
+    rh.intMatchID,
+
+    rh.intPreviousRank,
+    rh.intNewRank,
+
+    (rh.intNewRank - rh.intPreviousRank)
+        AS intRankChange,
+
+    rh.dtChangeDate
+
+FROM tblRankHistory rh
+
+INNER JOIN tblPlayerGameProfile pgp
+    ON rh.intProfileID = pgp.intProfileID
+
+INNER JOIN tblPlayer p
+    ON pgp.intPlayerID = p.intPlayerID
+
+INNER JOIN tblGame g
+    ON pgp.intGameID = g.intGameID;
+
+
+GO
+

@@ -195,3 +195,43 @@ INNER JOIN tblPlayer p
 GO
 
 
+CREATE VIEW vwGamePerformance
+AS
+SELECT
+    p.intPlayerID,
+    p.nvcNickname,
+
+    g.intGameID,
+    g.nvcName AS nvcGameName,
+    g.nvcGenre,
+
+    pgp.intProfileID,
+
+    pgp.intCurrentRank,
+    pgp.intMatchesPlayed,
+    pgp.intWins,
+    pgp.intLosses,
+
+    CAST(
+        CASE
+            WHEN pgp.intMatchesPlayed = 0 THEN 0
+            ELSE (pgp.intWins * 100.0) / pgp.intMatchesPlayed
+        END
+        AS DECIMAL(5,2)
+    ) AS decWinRate,
+
+    RANK() OVER (
+        PARTITION BY g.intGameID
+        ORDER BY pgp.intCurrentRank DESC
+    ) AS intGameRankPosition
+
+FROM tblPlayerGameProfile pgp
+
+INNER JOIN tblPlayer p
+    ON pgp.intPlayerID = p.intPlayerID
+
+INNER JOIN tblGame g
+    ON pgp.intGameID = g.intGameID;
+
+
+GO

@@ -1,3 +1,5 @@
+USE RankForge
+GO
 
 CREATE TABLE tblPlayer (
     intPlayerID    INT             IDENTITY(1,1) PRIMARY KEY,

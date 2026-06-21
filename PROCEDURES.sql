@@ -1,3 +1,6 @@
+USE RankForge
+GO
+
 CREATE PROCEDURE uspAddPlayerToGame
 (
     @intPlayerID INT,

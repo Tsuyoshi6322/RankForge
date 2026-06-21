@@ -1,4 +1,5 @@
-
+USE RankForge
+GO
 
 CREATE TRIGGER trgPlayerGameProfile_RankHistory
 ON tblPlayerGameProfile

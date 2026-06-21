@@ -1,3 +1,5 @@
+USE RankForge
+GO
 
 INSERT INTO tblPlayer (nvcNickname,nvcEmail,nvcCountry) VALUES
 ('ShadowWolf',  'shadowwolf@example.com',   'Poland'    ),

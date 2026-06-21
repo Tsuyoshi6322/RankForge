@@ -1,4 +1,5 @@
-
+USE RankForge
+GO
 
 CREATE VIEW vwLeaderboard
 AS
